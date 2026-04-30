@@ -1,0 +1,102 @@
+# Eagler Context Redacted Diff
+# Copyright (c) 2025 lax1dude.
+# Custom Boss: Wither of Undying (Triple Boss Bar)
+# Author: You
+
+> CHANGE  1 : 1  @  1 : 1
+~ public class EntityWither extends EntityMob implements IBossDisplayData {
+
+> INSERT  60 : 75  @  60
+
++ 	// Health per head (3 heads)
++ 	private float headHealth1 = 341.0F;
++ 	private float headHealth2 = 341.0F;
++ 	private float headHealth3 = 342.0F;
+
+> INSERT  120 : 200  @  120
+
++ 	@Override
++ 	public void onLivingUpdate() {
++ 		super.onLivingUpdate();
++
++ 		// ===============================
++ 		// LIFE DRAIN AURA
++ 		// ===============================
++ 		if (!this.worldObj.isRemote && this.ticksExisted % 20 == 0) {
++ 			List<EntityPlayer> players = this.worldObj.getEntitiesWithinAABB(
++ 					EntityPlayer.class,
++ 					this.getEntityBoundingBox().expand(20.0D, 10.0D, 20.0D));
++
++ 			for (int i = 0; i < players.size(); ++i) {
++ 				EntityPlayer p = players.get(i);
++
++ 				if (!p.capabilities.isCreativeMode && p.getHealth() > 1.0F) {
++ 					p.attackEntityFrom(DamageSource.magic, 2.0F);
++ 					this.heal(2.0F);
++ 				}
++ 			}
++ 		}
++
++ 		// ===============================
++ 		// IMMORTALITY
++ 		// ===============================
++ 		if (this.getHealth() < 1.0F) {
++ 			this.setHealth(1.0F);
++ 		}
++
++ 		// ===============================
++ 		// TRIPLE BOSS BAR SYSTEM
++ 		// ===============================
++ 		if (this.worldObj.isRemote) {
++ 			int phase = this.ticksExisted % 60;
++
++ 			if (phase < 20) {
++ 				BossStatus.setBossStatus(this, true);
++ 				BossStatus.healthScale = headHealth1 / 341.0F;
++ 			} else if (phase < 40) {
++ 				BossStatus.setBossStatus(this, true);
++ 				BossStatus.healthScale = headHealth2 / 341.0F;
++ 			} else {
++ 				BossStatus.setBossStatus(this, true);
++ 				BossStatus.healthScale = headHealth3 / 342.0F;
++ 			}
++ 		}
++ 	}
+
+> INSERT  201 : 235  @  201
+
++ 	@Override
++ 	public boolean attackEntityFrom(DamageSource source, float amount) {
++ 		// Split damage across heads
++ 		float split = amount / 3.0F;
++
++ 		headHealth1 = Math.max(1.0F, headHealth1 - split);
++ 		headHealth2 = Math.max(1.0F, headHealth2 - split);
++ 		headHealth3 = Math.max(1.0F, headHealth3 - split);
++
++ 		// Never allow real death
++ 		this.setHealth(1.0F);
++ 		return false;
++ 	}
+
+> INSERT  236 : 245  @  236
+
++ 	@Override
++ 	protected void onDeathUpdate() {
++ 		this.deathTime = 0;
++ 	}
+
+> INSERT  246 : 255  @  246
+
++ 	@Override
++ 	public float getMaxHealth() {
++ 		return 1024.0F;
++ 	}
+
+> INSERT  256 : 265  @  256
+
++ 	protected float getEaglerDynamicLightsValueSimple(float partialTicks) {
++ 		return 1.0F;
++ 	}
+
+> EOF
